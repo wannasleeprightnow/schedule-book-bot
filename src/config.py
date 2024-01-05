@@ -18,4 +18,6 @@ class Config:
     TARGET_MAIL = environ.get("TARGET_MAIL")
     TARGET_MAIL_PASSWORD = environ.get("TARGET_MAIL_PASSWORD")
     IMAP_SERVER = "imap.mail.ru"
-    CHECK_MAIL_INTERVAL = 30
+    CHECK_MAIL_INTERVAL = 60
+    FIND_FILENAME = "Изменения в расписании"
+    SAVE_FILENAME = "last_schedule.xlsx"

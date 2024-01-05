@@ -14,8 +14,9 @@ class Schedule:
         self.target_mail_password = Config.TARGET_MAIL_PASSWORD
         self.imap_server = Config.IMAP_SERVER
         self.interval = Config.CHECK_MAIL_INTERVAL
+        self.find_filename = Config.FIND_FILENAME
         self.logined_mail = ""
-        self.save_filename = "temp.xlsx"
+        self.save_filename = Config.SAVE_FILENAME
 
     def _connect_imap_server(self) -> str:
         if not self.logined_mail:
@@ -50,7 +51,7 @@ class Schedule:
         filename, charset = decode_header(filename)[0]
         if charset:
             filename = filename.decode(charset)
-            if filename == "Изменения в расписании - 3.xlsx":
+            if self.find_filename in filename:
                 return filename
 
     def _write_file(self, part) -> None:

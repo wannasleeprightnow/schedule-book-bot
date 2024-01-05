@@ -1,44 +1,75 @@
+from itertools import chain
+from datetime import datetime
 import re
-from wsgiref.handlers import format_date_time
 
 from openpyxl import load_workbook
 
-wb = load_workbook(filename='temp.xlsx')
-ws = wb.active
-values = []
-for row in ws.iter_rows(max_row=49, max_col=6, values_only=True):
-    values.append(list(row))
+from config import Config
+from schemas import ParsedSchedule
 
 
-def format_table(table):
-    table = [j for i in table for j in i]
-    formated_table = []
-    date = " ".join(table[0].split()[-2:]) + "\n"
-    for elem in table[1:]:
+class ScheduleExcelParser:
+
+    def __init__(self):
+        self.filename = Config.SAVE_FILENAME
+        self.active_workbook = load_workbook(self.filename).active
+        self._table = self._get_rows()
+        self._date = self._get_date()
+        self._formated_table = self._format_table()
+
+    def _get_rows(self):
+        rows = []
+        for row in self.active_workbook.iter_rows(max_col=6, values_only=True):
+            if row == ("---"):
+                break
+            rows.append(list(row))
+        return rows
+
+    def _get_date(self):
+        date_ = re.sub(r'[^0-9.]', '', self._table[0][0].strip())
+        date_ = date_.replace(".23", ".2023").replace(".24", ".2024")
+        return datetime.strptime(date_, "%d.%m.%Y")
+ 
+    def _format_elem(self, elem):
         if elem is not None:
-            elem = "".join(elem) if type(elem) == list else str(elem)
+            elem = str(elem).strip()
             elem = re.sub(r'[^А-Яа-яё/ ]', "", elem) if len(elem) > 3 else elem
-            elem = elem[:-1] if elem[-1] == "/" else elem
             elem = elem.strip()
-        formated_table.append(elem)
-    #         formated_table.append("---")
-    # return date + '\n'.join(["\t\t\t".join(formated_table[i: i + 6]) for i in range(5, len(formated_table[5:]), 6)])
-    return [formated_table[i: i + 6] for i in range(5, len(formated_table[5:]), 6)]
+            elem = elem[:-2] if elem[-1] == "/" else elem
+        return elem
 
+    def _format_table(self):
+        table = list(chain.from_iterable(self._table))
+        formated_table = [self._format_elem(elem) for elem in table[1:]]
+        table = [formated_table[i: i + 6]
+                 for i in range(5, len(formated_table[5:]), 6)]
+        return table
 
-def diff_classes(table):
-    limits = [table.index(i) for i in table if i[0] is None and not i[1] is None]
-    limits.append(len(table))
-    parallels = {}
-    for limit in range(1, len(limits)):
-        parallel = table[limits[limit - 1]: limits[limit]]
-        for i in range(1, len(parallel[0])):
-            if not parallel[0][i] is None:
-                parallels[parallel[0][i]] = []
-                for j in range(1, len(parallel)):
-                    if not parallel[j][i] is None:
-                        parallels[parallel[0][i]].append(parallel[j][i])
-    return parallels
+    def _get_indencies(self):
+        indencies = []
+        for i in self._formated_table:
+            if i[0] is None and not i[1] is None and i[1][-1] == "а":
+                indencies.append(self._formated_table.index(i))
+        return indencies + [len(self._formated_table)]
 
+    def _get_grade_schedule(self, grade, parallel):
+        return ParsedSchedule(
+            number_letter_grade=parallel[0][grade],
+            lessons_date=self._date,
+            lessons=[parallel[j][grade] for j in range(1, len(parallel))
+                     if not parallel[j][grade] is None]
+        )
 
-print(diff_classes(format_table(values)))
+    def correlate_grades_schedule(self):
+        schedules = []
+        parallels_indicies = self._get_indencies()
+        for i in range(1, len(parallels_indicies)):
+            parallel = self._formated_table[
+                parallels_indicies[i - 1]: parallels_indicies[i]
+                ]
+            for grade in range(1, len(parallel[0])):
+                if not parallel[0][grade] is None:
+                    schedule = self._get_grade_schedule(grade, parallel)
+                    if schedule.lessons:
+                        schedules.append(schedule)
+        return schedules
