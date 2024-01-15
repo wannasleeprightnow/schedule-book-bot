@@ -21,3 +21,10 @@ class UserInfo(StatesGroup):
     grade = State()
     deskmate_username = State()
     telegram_username = State()
+
+
+class WannaGiveBooks(StatesGroup):
+    telegram_id = State()
+    lessons_date = State()
+    books = State()
+    deskmate_books = State()

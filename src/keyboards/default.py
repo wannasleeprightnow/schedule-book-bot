@@ -1,10 +1,8 @@
-from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
+from aiogram.types import KeyboardButton
+from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
-keyboard = ReplyKeyboardMarkup(
-    keyboard=[
-        [KeyboardButton(text="Помощь")],
-        [KeyboardButton(text="Профиль")],
-        [KeyboardButton(text="Расписание")],
-    ],
-    resize_keyboard=True,
-)
+keyboard = (ReplyKeyboardBuilder()
+            .row(KeyboardButton(text="Расписание"), KeyboardButton(text="Что нести?"),
+                 KeyboardButton(text="Помощь"))
+            .row(KeyboardButton(text="Распределить вручную"), KeyboardButton(text="Профиль"))
+            ).adjust(2)

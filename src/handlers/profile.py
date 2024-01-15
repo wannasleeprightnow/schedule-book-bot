@@ -5,16 +5,16 @@ from aiogram.fsm.context import FSMContext
 from database import Database
 from handlers.states import UserDeskmate, UserGrade, UserNoticetime
 from keyboards.profile import builder as profile_keyboard
-
+from keyboards.default import keyboard
 
 profile_router = Router()
 
 
 @profile_router.message(F.text == "Профиль")
 async def command_profile_handler(message: Message):
-    await message.answer(
-        "Ваш профиль",
-        reply_markup=profile_keyboard.as_markup(resize_keyboard=True))
+    db = Database()
+    result = await db.get_profile(message.from_user.id)
+    await message.answer(f"Класс: {result[0]}\nСосед по парте: {result[1]}\nВремя уведомления: {result[2]}", reply_markup=profile_keyboard.as_markup(resize_keyboard=True))
 
 
 @profile_router.callback_query(F.data == "Изменить класс")
@@ -30,7 +30,8 @@ async def grade_choosen(message: Message, state: FSMContext):
     to_update = await state.get_data()
     db = Database()
     await db.update_user_grade(**to_update)
-    await message.answer("Ваш класс обновлен")
+    await message.answer("Ваш класс обновлен",
+                         reply_markup=keyboard.as_markup(resize_keyboard=True))
     await state.clear()
 
 
@@ -47,7 +48,8 @@ async def deskmate_choosen(message: Message, state: FSMContext):
     to_update = await state.get_data()
     db = Database()
     await db.update_user_deskmate(**to_update)
-    await message.answer("Ваш сосед по парте обновлен")
+    await message.answer("Ваш сосед по парте обновлен",
+                         reply_markup=keyboard.as_markup(resize_keyboard=True))
     await state.clear()
 
 
@@ -64,5 +66,6 @@ async def notice_time_choosen(message: Message, state: FSMContext):
     to_update = await state.get_data()
     db = Database()
     await db.update_user_notice_time(**to_update)
-    await message.answer("Ваше время напоминаний обновлено")
+    await message.answer("Ваше время напоминаний обновлено",
+                         reply_markup=keyboard.as_markup(resize_keyboard=True))
     await state.clear()

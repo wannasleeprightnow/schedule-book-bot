@@ -66,11 +66,13 @@ class Schedule:
                     if filename := self._get_filename(part):
                         if self._check_filename(filename):
                             self._write_file(part)
+                            return True
 
     def get_new(self):
         self._connect_imap_server()
         for mail_id in self._get_new_mails():
-            self._check_mail(mail_id)
+            if self._check_mail(mail_id):
+                return True
 
     async def check_new(self):
         while True:

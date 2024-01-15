@@ -3,7 +3,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from aiogram import Router
 
-from keyboards.default import keyboard as default_keyboard
+from keyboards.default import keyboard
 from database import Database
 from handlers.states import UserInfo
 
@@ -33,7 +33,8 @@ async def grade_choosen(message: Message, state: FSMContext):
 async def deskmate_chosen(message: Message, state: FSMContext):
     await state.update_data(deskmate_username=message.text)
     user_info = await state.get_data()
+    # user_info = {"telegram_id": 0, "grade": "10А", "deskmate_username": "wannasleeprightnow", "telegram_username": "sonka_0503"}
     db = Database()
     res = await db.add_user(user_info)
-    await message.answer(res, reply_markup=default_keyboard)
+    await message.answer(res, reply_markup=keyboard.as_markup(resize_keyboard=True))
     await state.clear()

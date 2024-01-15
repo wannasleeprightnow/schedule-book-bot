@@ -14,7 +14,7 @@ class ScheduleExcelParser:
         self.filename = Config.SAVE_FILENAME
         self.active_workbook = load_workbook(self.filename).active
         self._table = self._get_rows()
-        self._date = self._get_date()
+        self.date = self._get_date()
         self._formated_table = self._format_table()
 
     def _get_rows(self):
@@ -29,7 +29,7 @@ class ScheduleExcelParser:
         date_ = re.sub(r'[^0-9.]', '', self._table[0][0].strip())
         date_ = date_.replace(".23", ".2023").replace(".24", ".2024")
         return datetime.strptime(date_, "%d.%m.%Y")
- 
+
     def _format_elem(self, elem):
         if elem is not None:
             elem = str(elem).strip()
@@ -55,7 +55,7 @@ class ScheduleExcelParser:
     def _get_grade_schedule(self, grade, parallel):
         return ParsedSchedule(
             number_letter_grade=parallel[0][grade],
-            lessons_date=self._date,
+            lessons_date=self.date,
             lessons=[parallel[j][grade] for j in range(1, len(parallel))
                      if not parallel[j][grade] is None]
         )
