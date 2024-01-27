@@ -1,18 +1,23 @@
+from dataclasses import dataclass
+import datetime
 from itertools import chain
-from datetime import datetime
 import re
 
 from openpyxl import load_workbook
 
-from config import Config
-from schemas import ParsedSchedule
+from config import MailConfig
+
+
+@dataclass
+class ParsedSchedule:
+    number_letter_grade: str
+    lessons_date: datetime.date
+    lessons: list[str]
 
 
 class ScheduleExcelParser:
-
     def __init__(self):
-        self.filename = Config.SAVE_FILENAME
-        self.active_workbook = load_workbook(self.filename).active
+        self.active_workbook = load_workbook(MailConfig.SAVE_FILENAME).active
         self._table = self._get_rows()
         self.date = self._get_date()
         self._formated_table = self._format_table()
@@ -26,14 +31,14 @@ class ScheduleExcelParser:
         return rows
 
     def _get_date(self):
-        date_ = re.sub(r'[^0-9.]', '', self._table[0][0].strip())
+        date_ = re.sub(r"[^0-9.]", "", self._table[0][0].strip())
         date_ = date_.replace(".23", ".2023").replace(".24", ".2024")
-        return datetime.strptime(date_, "%d.%m.%Y")
+        return datetime.datetime.strptime(date_, "%d.%m.%Y")
 
     def _format_elem(self, elem):
         if elem is not None:
             elem = str(elem).strip()
-            elem = re.sub(r'[^А-Яа-яё/ ]', "", elem) if len(elem) > 3 else elem
+            elem = re.sub(r"[^А-Яа-яё/ ]", "", elem) if len(elem) > 3 else elem
             elem = elem.strip()
             elem = elem[:-2] if elem[-1] == "/" else elem
         return elem
@@ -41,8 +46,10 @@ class ScheduleExcelParser:
     def _format_table(self):
         table = list(chain.from_iterable(self._table))
         formated_table = [self._format_elem(elem) for elem in table[1:]]
-        table = [formated_table[i: i + 6]
-                 for i in range(5, len(formated_table[5:]), 6)]
+        table = [
+            formated_table[i : i + 6]
+            for i in range(5, len(formated_table[5:]), 6)
+        ]
         return table
 
     def _get_indencies(self):
@@ -56,8 +63,11 @@ class ScheduleExcelParser:
         return ParsedSchedule(
             number_letter_grade=parallel[0][grade],
             lessons_date=self.date,
-            lessons=[parallel[j][grade] for j in range(1, len(parallel))
-                     if not parallel[j][grade] is None]
+            lessons=[
+                parallel[j][grade]
+                for j in range(1, len(parallel))
+                if not parallel[j][grade] is None
+            ],
         )
 
     def correlate_grades_schedule(self):
@@ -65,8 +75,8 @@ class ScheduleExcelParser:
         parallels_indicies = self._get_indencies()
         for i in range(1, len(parallels_indicies)):
             parallel = self._formated_table[
-                parallels_indicies[i - 1]: parallels_indicies[i]
-                ]
+                parallels_indicies[i - 1] : parallels_indicies[i]
+            ]
             for grade in range(1, len(parallel[0])):
                 if not parallel[0][grade] is None:
                     schedule = self._get_grade_schedule(grade, parallel)

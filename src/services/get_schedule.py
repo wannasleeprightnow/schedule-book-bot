@@ -1,28 +1,18 @@
-import imaplib
 import email
 from email.header import decode_header
-from asyncio import sleep
+import imaplib
 
-from config import Config
+from config import MailConfig
 
 
 class Schedule:
-
     def __init__(self) -> None:
-        self.sender_mail = Config.SENDER_MAIL
-        self.target_mail = Config.TARGET_MAIL
-        self.target_mail_password = Config.TARGET_MAIL_PASSWORD
-        self.imap_server = Config.IMAP_SERVER
-        self.interval = Config.CHECK_MAIL_INTERVAL
-        self.find_filename = Config.FIND_FILENAME
         self.logined_mail = ""
-        self.save_filename = Config.SAVE_FILENAME
 
     def _connect_imap_server(self) -> str:
         if not self.logined_mail:
-            mail = imaplib.IMAP4_SSL(self.imap_server)
-            mail.login(
-                self.target_mail, self.target_mail_password)
+            mail = imaplib.IMAP4_SSL(MailConfig.IMAP_SERVER)
+            mail.login(MailConfig.TARGET_MAIL, MailConfig.TARGET_MAIL_PASSWORD)
             mail.select("inbox")
             self.logined_mail = mail
         return self.logined_mail
@@ -38,7 +28,7 @@ class Schedule:
             return email.message_from_bytes(mail_data[0][1])
 
     def _check_sender(self, message) -> bool:
-        return self.sender_mail in message["From"]
+        return MailConfig.SENDER_MAIL in message["From"]
 
     def _check_multipart(self, message) -> bool:
         return message.get_content_maintype() == "multipart"
@@ -51,11 +41,11 @@ class Schedule:
         filename, charset = decode_header(filename)[0]
         if charset:
             filename = filename.decode(charset)
-            if self.find_filename in filename:
+            if MailConfig.FIND_FILENAME in filename:
                 return filename
 
     def _write_file(self, part) -> None:
-        with open(self.save_filename, "wb") as file:
+        with open(MailConfig.SAVE_FILENAME, "wb") as file:
             file.write(part.get_payload(decode=True))
 
     def _check_mail(self, mail_id):
@@ -68,13 +58,8 @@ class Schedule:
                             self._write_file(part)
                             return True
 
-    def get_new(self):
+    def is_new_exists(self):
         self._connect_imap_server()
         for mail_id in self._get_new_mails():
             if self._check_mail(mail_id):
                 return True
-
-    async def check_new(self):
-        while True:
-            self.get_new()
-            await sleep(self.interval)
