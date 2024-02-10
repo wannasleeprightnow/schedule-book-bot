@@ -1,74 +1,73 @@
+import datetime
+
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, InlineKeyboardButton, Message
-from aiogram.utils.keyboard import InlineKeyboardBuilder
-from loader import database
+from aiogram.types import CallbackQuery, Message
+
+from config import FormatsConfig
+from keyboards.builders import books_list_builder
 from keyboards.default import keyboard
 from loader import bot
+from services.divided_books_manually import (
+    add_divided_books,
+    get_dates,
+    get_lessons,
+)
+from services.profile import is_deskmate_exists
 
 router = Router()
 
 
 @router.message(F.text == "Распределить вручную")
 async def command_divide_manually_handler(message: Message, state: FSMContext):
-    await state.update_data(telegram_id=message.from_user.id)
-    dates = await database.get_divided_books_dates_by_grade(
-        message.from_user.id)
-    builder = InlineKeyboardBuilder()
-    builder.add(*[InlineKeyboardButton(
-        text=str(date),
-        callback_data="divide_manually_date_" + str(date)) for date in dates])
+    telegram_user_id = message.from_user.id
+    deskmate = await is_deskmate_exists(telegram_user_id)
+    if not deskmate:
+        await message.answer(
+            "У вас нет соседа по парте.",
+            reply_markup=keyboard.as_markup(resize_keyboard=True),
+        )
+        return
+    await state.update_data(telegram_user_id=message.from_user.id)
+    dates_keyboard = await get_dates(telegram_user_id)
     await message.answer(
         "Выберите дату",
-        reply_markup=builder.adjust(1).as_markup(resize_keyboard=True))
+        reply_markup=dates_keyboard.adjust(1).as_markup(resize_keyboard=True),
+    )
 
 
-@router.callback_query(F.data.startswith("divide_manually_date_"))
+@router.callback_query(F.data.startswith("redivide_"))
 async def divide_manually_callback(callback: CallbackQuery, state: FSMContext):
-    date = callback.data[21:]
-    lessons = await database.get_schedule(callback.from_user.id, date)
-    all_books = list(map(
-        lambda x: ' '.join(x.split(" ")[1:]),
-        lessons.split("\n")))
+    telegram_user_id = callback.from_user.id
+    lessons_date = datetime.datetime.strptime(
+        callback.data.split("_")[1], FormatsConfig.DATABASE_DATE_FORMAT
+    ).date()
+    lessons = await get_lessons(telegram_user_id, lessons_date)
+    list_books_keyboard = books_list_builder(lessons)
     await state.update_data(
-        lessons_date=date,
-        all_books=all_books,
-        my_books=[],
-        deskmate_books=[])
-    builder = InlineKeyboardBuilder()
-    builder.add(*[InlineKeyboardButton(
-                text=lesson,
-                callback_data="wanna_give_" + str(lesson))
-                for lesson in lessons.split("\n")],
-                InlineKeyboardButton(text="Готово", callback_data="stop"))
+        lessons_date=lessons_date, all_books=set(lessons), user_books=[]
+    )
     await callback.message.answer(
         "Выберите предметы, учебники по которым вы хотите взять. Остальные \
 учебники возьмет сосед по парте.",
-        reply_markup=builder.adjust(1).as_markup(resize_keyboard=True)
-                                  )
+        reply_markup=list_books_keyboard.adjust(1).as_markup(
+            resize_keyboard=True
+        ),
+    )
 
 
 @router.callback_query(F.data.startswith("wanna_give_"))
 async def wanna_give_book_callback(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
-    my_books = data["my_books"] + [' '.join(callback.data.split(" ")[1:])]
-    await state.update_data(my_books=my_books)
+    user_books = data["user_books"] + [callback.data.split("_")[2]]
+    await state.update_data(user_books=user_books)
 
 
 @router.callback_query(F.data.startswith("stop"))
 async def stop_book_callback(callback: CallbackQuery, state: FSMContext):
-    data = await state.get_data()
+    data: dict = await state.get_data()
     await state.clear()
-    data["my_books"] = list(set(data["my_books"]))
-    data["deskmate_books"] = list(set(data["all_books"]) - set(
-                                                            data["my_books"]))
-    deskmate_telegram_id = await database.get_deskmate(data["telegram_id"])
-    await bot.send_message(
-        deskmate_telegram_id,
-        f"{data["lessons_date"].replace("-", ".")} вам нужно взять учебники по следующим предметам:\
-    \n{'\n'.join([f"{i}. {lesson}" for i, lesson in enumerate(data["deskmate_books"], start=1)])}")
-    del data["all_books"]
-    await database.custom_devide_books(**data)
+    await bot.send_message(*(await add_divided_books(data)))
     await callback.message.answer(
-        "Успешно!",
-        reply_markup=keyboard.as_markup(resize_keyboard=True))
+        "Успешно!", reply_markup=keyboard.as_markup(resize_keyboard=True)
+    )

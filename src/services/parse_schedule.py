@@ -5,7 +5,7 @@ import re
 
 from openpyxl import load_workbook
 
-from config import MailConfig
+from config import FormatsConfig, MailConfig
 
 
 @dataclass
@@ -33,7 +33,8 @@ class ScheduleExcelParser:
     def _get_date(self):
         date_ = re.sub(r"[^0-9.]", "", self._table[0][0].strip())
         date_ = date_.replace(".23", ".2023").replace(".24", ".2024")
-        return datetime.datetime.strptime(date_, "%d.%m.%Y")
+        return datetime.datetime.strptime(
+            date_, FormatsConfig.DATE_FORMAT).date()
 
     def _format_elem(self, elem):
         if elem is not None:
@@ -70,7 +71,7 @@ class ScheduleExcelParser:
             ],
         )
 
-    def correlate_grades_schedule(self):
+    def correlate_grades_schedule(self) -> list[ParsedSchedule]:
         schedules = []
         parallels_indicies = self._get_indencies()
         for i in range(1, len(parallels_indicies)):

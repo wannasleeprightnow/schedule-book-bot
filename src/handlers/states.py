@@ -19,12 +19,5 @@ class UserNoticetime(StatesGroup):
 class UserInfo(StatesGroup):
     telegram_id = State()
     grade = State()
-    deskmate_username = State()
+    deskmate_telegram_username = State()
     telegram_username = State()
-
-
-class WannaGiveBooks(StatesGroup):
-    telegram_id = State()
-    lessons_date = State()
-    books = State()
-    deskmate_books = State()
