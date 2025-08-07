@@ -2,7 +2,6 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
-from models.grade import Grade
 
 
 class User(Base):
@@ -21,7 +20,7 @@ class User(Base):
     deskmate_id: Mapped[int | None] = mapped_column(
         ForeignKey("user.id", ondelete="CASCADE")
     )
-    grade: Mapped["Grade"] = relationship(
+    grade: Mapped["Grade"] = relationship(  # noqa: F821
         back_populates="users", foreign_keys=[grade_id]
     )
     deskmate: Mapped["User"] = relationship(foreign_keys=[deskmate_id])

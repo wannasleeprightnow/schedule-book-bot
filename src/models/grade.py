@@ -1,7 +1,6 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
-from models.user import User
 
 
 class Grade(Base):
@@ -12,4 +11,4 @@ class Grade(Base):
     )
     number: Mapped[int | None]
     letter: Mapped[str | None]
-    users: Mapped[list["User"]] = relationship(back_populates="grade")
+    users: Mapped[list["User"]] = relationship(back_populates="grade")  # noqa: F821

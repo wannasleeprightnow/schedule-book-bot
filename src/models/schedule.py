@@ -2,7 +2,6 @@ from sqlalchemy import Date, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from models.base import Base
-from models.grade import Grade
 
 
 class Schedule(Base):
@@ -16,4 +15,4 @@ class Schedule(Base):
     grade_id: Mapped[int] = mapped_column(
         ForeignKey("grade.id", ondelete="CASCADE")
     )
-    grade: Mapped["Grade"] = relationship(foreign_keys=[grade_id])
+    grade: Mapped["Grade"] = relationship(foreign_keys=[grade_id])  # noqa: F821

@@ -10,8 +10,8 @@ from services.send_updated_schedule import is_new_schedule_exists
 
 async def main():
     include_routers()
-    asyncio.get_event_loop().create_task(send_notices())
-    asyncio.get_event_loop().create_task(is_new_schedule_exists())
+    # asyncio.get_event_loop().create_task(send_notices())
+    # asyncio.get_event_loop().create_task(is_new_schedule_exists())
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     await dp.start_polling(bot)
 
