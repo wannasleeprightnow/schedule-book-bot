@@ -1,6 +1,6 @@
 import email
-from email.header import decode_header
 import imaplib
+from email.header import decode_header
 
 from config import MailConfig
 
@@ -34,7 +34,7 @@ class Schedule:
         return message.get_content_maintype() == "multipart"
 
     def _get_filename(self, part) -> str | None:
-        if not (part in ("multipart", "text")):
+        if part not in ("multipart", "text"):
             return part.get_filename()
 
     def _check_filename(self, filename) -> str | None:

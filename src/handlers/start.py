@@ -1,11 +1,11 @@
+from aiogram import Router
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
-from aiogram import Router
 
+from handlers.states import UserInfo
 from keyboards.default import keyboard
 from loader import database
-from handlers.states import UserInfo
 from services.start import register_user
 
 router = Router()
@@ -16,11 +16,15 @@ async def command_start_handler(message: Message, state: FSMContext) -> None:
     telegram_user_id = message.from_user.id
     is_registred = await database.is_user_registered(telegram_user_id)
     if not is_registred:
-        await message.answer("Привет! Этот бот поможет тебе распределять \
+        await message.answer(
+            "Привет! Этот бот поможет тебе распределять \
 учебники с соседом по парте, а также всегда знать актуальное расписание. \
-Больше информации в Помощь.")
-        await message.answer("Введите класс, в котором вы учитесь. \
-Например, 10А.")
+Больше информации в Помощь."
+        )
+        await message.answer(
+            "Введите класс, в котором вы учитесь. \
+Например, 10А."
+        )
         await state.update_data(
             telegram_id=telegram_user_id,
             telegram_username=message.from_user.username,

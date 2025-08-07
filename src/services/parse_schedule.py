@@ -1,7 +1,7 @@
-from dataclasses import dataclass
 import datetime
-from itertools import chain
 import re
+from dataclasses import dataclass
+from itertools import chain
 
 from openpyxl import load_workbook
 
@@ -34,7 +34,8 @@ class ScheduleExcelParser:
         date_ = re.sub(r"[^0-9.]", "", self._table[0][0].strip())
         date_ = date_.replace(".23", ".2023").replace(".24", ".2024")
         return datetime.datetime.strptime(
-            date_, FormatsConfig.DATE_FORMAT).date()
+            date_, FormatsConfig.DATE_FORMAT
+        ).date()
 
     def _format_elem(self, elem):
         if elem is not None:
@@ -56,7 +57,7 @@ class ScheduleExcelParser:
     def _get_indencies(self):
         indencies = []
         for i in self._formated_table:
-            if i[0] is None and not i[1] is None and i[1][-1] == "а":
+            if i[0] is None and i[1] is not None and i[1][-1] == "а":
                 indencies.append(self._formated_table.index(i))
         return indencies + [len(self._formated_table)]
 
@@ -67,7 +68,7 @@ class ScheduleExcelParser:
             lessons=[
                 parallel[j][grade]
                 for j in range(1, len(parallel))
-                if not parallel[j][grade] is None
+                if parallel[j][grade] is not None
             ],
         )
 
@@ -79,7 +80,7 @@ class ScheduleExcelParser:
                 parallels_indicies[i - 1] : parallels_indicies[i]
             ]
             for grade in range(1, len(parallel[0])):
-                if not parallel[0][grade] is None:
+                if parallel[0][grade] is not None:
                     schedule = self._get_grade_schedule(grade, parallel)
                     if schedule.lessons:
                         schedules.append(schedule)

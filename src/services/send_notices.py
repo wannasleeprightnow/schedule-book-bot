@@ -1,5 +1,5 @@
-from asyncio import sleep
 import datetime
+from asyncio import sleep
 
 from config import FormatsConfig
 from loader import bot, database
@@ -21,7 +21,8 @@ async def send_notices():
                 await sleep(60)
                 continue
             lessons_date = lessons_date.strftime(
-                            FormatsConfig.DATABASE_DATE_FORMAT)
+                FormatsConfig.DATABASE_DATE_FORMAT
+            )
             for user in users:
                 deskmate = await database.get_user_deskmate(user.telegram_id)
                 if deskmate is not None:
@@ -30,6 +31,7 @@ async def send_notices():
                     )
                 else:
                     answer = await get_schedule_for_handler(
-                        user.telegram_id, lessons_date)
+                        user.telegram_id, lessons_date
+                    )
                 await bot.send_message(user.telegram_id, answer)
         await sleep(60)

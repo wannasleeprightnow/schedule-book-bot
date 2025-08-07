@@ -30,7 +30,6 @@ async def set_new_grade(telegram_user_id: int, grade: str) -> str:
 async def set_new_deskmate(
     telegram_user_id: int, deskmate_telegram_username: str
 ) -> str:
-
     if deskmate_telegram_username == "-":
         await delete_deskmate(telegram_user_id)
         return "Теперь у вас нет соседа по парте."

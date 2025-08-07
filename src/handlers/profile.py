@@ -1,10 +1,10 @@
-from aiogram import Router, F
+from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
+from handlers.states import UserDeskmate, UserGrade, UserNoticetime
 from keyboards.default import keyboard
 from keyboards.profile import builder as profile_keyboard
-from handlers.states import UserDeskmate, UserGrade, UserNoticetime
 from services.profile import (
     get_user_profile,
     set_new_deskmate,
@@ -26,8 +26,10 @@ async def command_profile_handler(message: Message):
 
 @router.callback_query(F.data == "Изменить класс")
 async def change_grade(callback: CallbackQuery, state: FSMContext):
-    await callback.message.answer("Введите класс, в котором вы учитесь.\
-Например, 10А")
+    await callback.message.answer(
+        "Введите класс, в котором вы учитесь.\
+Например, 10А"
+    )
     await state.set_state(UserGrade.grade)
 
 

@@ -2,8 +2,8 @@ import asyncio
 import logging
 import sys
 
-from loader import bot, dp
 from handlers.routers import include_routers
+from loader import bot, dp
 from services.send_notices import send_notices
 from services.send_updated_schedule import is_new_schedule_exists
 

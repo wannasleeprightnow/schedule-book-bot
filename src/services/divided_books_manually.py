@@ -18,7 +18,9 @@ async def get_dates(telegram_user_id: int) -> InlineKeyboardBuilder:
 async def get_lessons(
     telegram_user_id: int, lessons_date: datetime.date
 ) -> list[str]:
-    lessons_ids = await database.get_lessons_ids(telegram_user_id, lessons_date)
+    lessons_ids = await database.get_lessons_ids(
+        telegram_user_id, lessons_date
+    )
     lessons_ids = list(map(int, lessons_ids.split(", ")))
     lessons_names = await database.get_lessons_correct_names(lessons_ids)
     return lessons_names
@@ -37,21 +39,43 @@ async def add_divided_books(user_data: dict) -> tuple:
     if deskmate is None:
         return "Что-то пошло не так."
 
-    user_books = list(map(str, await database.get_lessons_ids_by_correct_names(
-        user_data["user_books"]
-    )))
-    deskmate_books = list(map(str, (
-        await database.get_lessons_ids_by_correct_names(
-            user_data["deskmate_books"]
+    user_books = list(
+        map(
+            str,
+            await database.get_lessons_ids_by_correct_names(
+                user_data["user_books"]
+            ),
         )
-    )))
+    )
+    deskmate_books = list(
+        map(
+            str,
+            (
+                await database.get_lessons_ids_by_correct_names(
+                    user_data["deskmate_books"]
+                )
+            ),
+        )
+    )
     await database.add_divided_books(
-        ", ".join(user_books), ", ".join(deskmate_books),
-        deskmate.id, schedule_id, user.id
-        )
+        ", ".join(user_books),
+        ", ".join(deskmate_books),
+        deskmate.id,
+        schedule_id,
+        user.id,
+    )
     formated_date = user_data["lessons_date"].strftime(
-        FormatsConfig.DATE_FORMAT)
-    answer = f"{hbold(f"Перераспределение учебников на\n{formated_date}")}\
-        \n\n{"\n".join([f"{i}. {lesson}" for i, lesson in enumerate(
-            user_data["deskmate_books"], start=1)])}"
+        FormatsConfig.DATE_FORMAT
+    )
+    answer = f"{hbold(f'Перераспределение учебников на\n{formated_date}')}\
+        \n\n{
+        '\n'.join(
+            [
+                f'{i}. {lesson}'
+                for i, lesson in enumerate(
+                    user_data['deskmate_books'], start=1
+                )
+            ]
+        )
+    }"
     return deskmate.telegram_id, answer

@@ -1,9 +1,9 @@
 from aiogram import F, Router
 from aiogram.types import CallbackQuery, Message
 
-from loader import database
 from keyboards.builders import dates_keyboard_builder
 from keyboards.default import keyboard
+from loader import database
 from services.schedule import get_schedule_for_handler
 
 router = Router()

@@ -1,23 +1,30 @@
 import datetime
 
 from sqlalchemy import and_, insert, or_, select, update
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import joinedload
 
-from .db import async_session_maker
+from config import DatabaseConfig
 from models.divided_books import DividedBooks
 from models.grade import Grade
 from models.lesson import Lesson
 from models.schedule import Schedule
 from models.user import User
 
+async_engine = create_async_engine(
+    DatabaseConfig.POSTGRES_DSN,
+    echo=False,
+)
+async_session_maker = async_sessionmaker(async_engine, expire_on_commit=False)
+
 
 class Database:
-    async def _query(self, query):
+    async def _query(self, query) -> any:
         async with async_session_maker() as session:
             result = await session.execute(query)
             return result
 
-    async def _stmt(self, stmt):
+    async def _stmt(self, stmt) -> None:
         async with async_session_maker() as session:
             await session.execute(stmt)
             await session.commit()
@@ -61,7 +68,9 @@ class Database:
     ) -> list[int]:
         lessons_ids = []
         for lessons_name in lessons_names_list:
-            query = select(Lesson.id).where(Lesson.correct_name == lessons_name)
+            query = select(Lesson.id).where(
+                Lesson.correct_name == lessons_name
+            )
             lessons_id = await self._query(query)
             lessons_ids.append(lessons_id.scalars().first())
         return lessons_ids
@@ -263,7 +272,7 @@ class Database:
 
     async def get_divided_books(
         self, user_id: int, grade_id: int, lessons_date: datetime.date
-    ):
+    ) -> list[int]:
         query = (
             select(DividedBooks)
             .where(

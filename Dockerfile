@@ -1,20 +1,25 @@
-FROM python:3.12
+FROM python:3.12-slim
 
-ENV POETRY_VERSION=1.7.1
-ENV POETRY_HOME=/opt/poetry
-ENV POETRY_VENV=/opt/poetry-venv
-ENV POETRY_CACHE_DIR=/opt/.cache
+RUN apt-get update && apt-get install -y --no-install-recommends \
+		build-essential \
+    gcc \
+    libffi-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN python3 -m venv $POETRY_VENV \
-	&& $POETRY_VENV/bin/pip install -U pip setuptools \
-	&& $POETRY_VENV/bin/pip install poetry==${POETRY_VERSION}
+WORKDIR /code
 
-ENV PATH="${PATH}:${POETRY_VENV}/bin"
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-WORKDIR /app
+RUN pip install poetry==1.7.1
 
 COPY poetry.lock pyproject.toml ./
-RUN poetry install
+RUN poetry config virtualenvs.create false
+RUN poetry install --no-interaction --no-ansi
 
-COPY . /app
-CMD [ "poetry", "run", "python", "src/app.py" ]
+COPY . .
+
+EXPOSE 8080
+
+RUN chmod +x src/start.sh

@@ -1,5 +1,5 @@
-from os import environ
 from dataclasses import dataclass
+from os import environ
 
 from dotenv import load_dotenv
 
@@ -15,7 +15,7 @@ class FormatsConfig:
 
 @dataclass
 class BotConfig:
-    TOKEN: str = environ.get("TOKEN")
+    TOKEN: str = environ.get("BOT_TOKEN")
 
 
 @dataclass
@@ -36,5 +36,4 @@ class DatabaseConfig:
     POSTGRES_HOST = environ.get("POSTGRES_HOST")
     POSTGRES_PORT = environ.get("POSTGRES_PORT")
     POSTGRES_DB = environ.get("POSTGRES_DB")
-    CONNECT_DB = f"postgresql+asyncpg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
-    SQLITE_DB = "sqlite+aiosqlite:///db.sqlite3"
+    POSTGRES_DSN = f"postgresql+asyncpg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"

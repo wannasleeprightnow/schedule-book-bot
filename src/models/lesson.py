@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Mapped, mapped_column
 
-from db.db import Base
+from models.base import Base
 
 
 class Lesson(Base):

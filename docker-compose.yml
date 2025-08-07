@@ -1,0 +1,38 @@
+services:
+  bot:
+    build:
+      dockerfile: Dockerfile
+    container_name: bot
+    command: ["./src/start.sh"]
+    restart: always
+    ports:
+      - 8080:8080
+    env_file:
+      - .env
+    networks:
+      - app_network
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: postgres
+    command: ["postgres", "-c", "hba_file=/var/lib/postgresql/pg_hba.conf"]
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "5555:5432"
+    volumes:  
+      - postgres_data:/var/lib/postgresql/data
+      - ./pg_hba.conf:/var/lib/postgresql/pg_hba.conf
+    networks:
+      - app_network
+
+volumes:
+  postgres_data:
+  ..:
+
+networks:
+  app_network:
+    driver: bridge

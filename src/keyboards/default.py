@@ -6,11 +6,12 @@ keyboard = (
     .row(
         KeyboardButton(text="Расписание"),
         KeyboardButton(text="Что нести?"),
-        KeyboardButton(text="Помощь")
-        )
+        KeyboardButton(text="Помощь"),
+    )
     .row(
         KeyboardButton(text="Распределить вручную"),
-        KeyboardButton(text="Профиль"))
-    ).adjust(2)
+        KeyboardButton(text="Профиль"),
+    )
+).adjust(2)
 
 restart_keyboard = ReplyKeyboardBuilder([[KeyboardButton(text="/start")]])
